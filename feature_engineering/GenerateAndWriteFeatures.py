@@ -1,4 +1,17 @@
 # Databricks notebook source
+# /// script
+# [tool.databricks.environment]
+# environment_version = "5"
+# dependencies = [
+#   "databricks",
+#   "databricks-feature-engineering",
+# ]
+# ///
+# MAGIC %pip install databricks-feature-engineering
+# MAGIC %pip install databricks
+
+# COMMAND ----------
+
 ##################################################################################
 # Generate and Write Features Notebook
 #
@@ -75,17 +88,29 @@ assert input_table_path != "", "input_table_path notebook parameter must be spec
 assert output_table_name != "", "output_table_name notebook parameter must be specified"
 
 # Extract database name. Needs to be updated for Unity Catalog to the Schema name.
-output_database = output_table_name.split(".")[1]
+output_database = "dev"
+
+# COMMAND ----------
+
+# MAGIC %sql
+# MAGIC SELECT current_catalog(), current_schema();
+# MAGIC SELECT * FROM dev.my_mlops_project.population LIMIT 5;
+# MAGIC
 
 # COMMAND ----------
 
 # DBTITLE 1,Create database.
-spark.sql("CREATE DATABASE IF NOT EXISTS " + output_database)
+spark.sql("CREATE DATABASE IF NOT EXISTS " + "dev.my_mlops_project")
 
 # COMMAND ----------
 
 # DBTITLE 1, Read input data.
 raw_data = spark.table(input_table_path)
+
+# COMMAND ----------
+
+raw_data.printSchema()
+
 # COMMAND ----------
 
 # DBTITLE 1,Compute features.
@@ -101,6 +126,10 @@ features_df = compute_features_fn(
     start_date=input_start_date,
     end_date=input_end_date,
 )
+
+# COMMAND ----------
+
+features_df.printSchema()
 
 # COMMAND ----------
 

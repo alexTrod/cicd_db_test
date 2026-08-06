@@ -3,7 +3,7 @@ This sample module contains features logic that can be used to generate and popu
 You should plug in your own features computation logic in the compute_features_fn method below.
 """
 import pyspark.sql.functions as F
-from pyspark.sql.types import IntegerType, FloatType
+from pyspark.sql.types import IntegerType, FloatType, LongType
 
 
 def _filter_df_by_ts(df, ts_column, start_date, end_date):
@@ -38,15 +38,15 @@ def compute_features_fn(input_df, timestamp_column, start_date, end_date):
        df.select(
         F.col("year").alias("year").cast(IntegerType()),
         F.col("yearly_change_pct").cast(FloatType()),
-        F.col("yearly_change").cast(IntegerType()),
-        F.coalesce(F.col("migrants").cast(FloatType()), F.lit(0)).alias("migrants"),
+        F.col("yearly_change").cast(LongType()),
+        F.coalesce(F.col("migrants").cast(LongType()), F.lit(0)).alias("migrants"),
         F.col("age_medan").alias("age_medan").cast(FloatType()),
         F.col("fertility_rate").alias("fertility_rate").cast(FloatType()),
-        F.col("density").alias("density").cast(IntegerType()),
+        F.col("density").alias("density").cast(LongType()),
         F.col("pop_urban_pct").alias("pop_urban_pct").cast(FloatType()),
-        F.col("pop_urban").alias("pop_urban").cast(IntegerType()),
+        F.col("pop_urban").alias("pop_urban").cast(LongType()),
         F.col("share_world").alias("share_world").cast(FloatType()),
-        F.col("pop_world").alias("pop_world").cast(IntegerType()),
+        F.col("pop_world").alias("pop_world").cast(LongType()),
         F.col("rank_world").alias("rank_world").cast(IntegerType()),
        )
     )   
