@@ -29,7 +29,7 @@
 # A Hive-registered Delta table containing the input data.
 dbutils.widgets.text(
     "input_table_path",
-    "/databricks-datasets/nyctaxi-with-zipcodes/subsampled",
+    "dev.my_mlops_project.population",
     label="Input Table Name",
 )
 # Input start date.
@@ -39,24 +39,24 @@ dbutils.widgets.text("input_end_date", "", label="Input End Date")
 # Timestamp column. Will be used to filter input start/end dates.
 # This column is also used as a timestamp key of the feature table.
 dbutils.widgets.text(
-    "timestamp_column", "tpep_pickup_datetime", label="Timestamp column"
+    "timestamp_column", "", label="Timestamp column"
 )
 
 # Feature table to store the computed features.
 dbutils.widgets.text(
     "output_table_name",
-    "dev.my_mlops_project.trip_pickup_features",
+    "dev.my_mlops_project.population_features",
     label="Output Feature Table Name",
 )
 
 # Feature transform module name.
 dbutils.widgets.text(
-    "features_transform_module", "pickup_features", label="Features transform file."
+    "features_transform_module", "population_features", label="Features transform file."
 )
 # Primary Keys columns for the feature table;
 dbutils.widgets.text(
     "primary_keys",
-    "zip",
+    "year",
     label="Primary keys columns for the feature table, comma separated.",
 )
 
@@ -85,8 +85,7 @@ spark.sql("CREATE DATABASE IF NOT EXISTS " + output_database)
 # COMMAND ----------
 
 # DBTITLE 1, Read input data.
-raw_data = spark.read.format("delta").load(input_table_path)
-
+raw_data = spark.table(input_table_path)
 # COMMAND ----------
 
 # DBTITLE 1,Compute features.
@@ -114,8 +113,7 @@ fe = FeatureEngineeringClient()
 # Note that this is a no-op if a table with the same name and schema already exists.
 fe.create_table(
     name=output_table_name,
-    primary_keys=[x.strip() for x in pk_columns.split(",")] + [ts_column],
-    timestamp_keys=[ts_column],
+    primary_keys=[pk_columns],
     df=features_df,
 )
 
