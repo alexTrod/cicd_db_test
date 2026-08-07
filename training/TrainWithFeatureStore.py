@@ -66,6 +66,18 @@ mlflow.set_experiment(experiment_name)
 
 # COMMAND ----------
 
+def get_latest_model_version(model_name):
+    latest_version = 1
+    mlflow_client = MlflowClient()
+    for mv in mlflow_client.search_model_versions(f"name='{model_name}'"):
+        version_int = int(mv.version)
+        if version_int > latest_version:
+            latest_version = version_int
+    return latest_version
+
+
+# COMMAND ----------
+
 # DBTITLE 1, Load raw data
 raw_data = spark.table(input_table_path)
 raw_data.display()
