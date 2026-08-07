@@ -62,7 +62,7 @@ jobs:
           git config --global user.name "Deploy CICD Bot"
           git config --global user.email "noreply-cicd-bot@databricks.com"
           git checkout -b add-cicd-for-${{ github.event.inputs.project_name }}-${{ env.timestamp }}
-          git add .github "$PROJECT_NAME_ALPHA/databricks.yml"
+          git add .github databricks.ym"
           git commit -m "Add CICD for ${{ github.event.inputs.project_name }}"
           git push origin add-cicd-for-${{ github.event.inputs.project_name }}-${{ env.timestamp }}
 
