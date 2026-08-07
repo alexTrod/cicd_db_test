@@ -61,6 +61,7 @@ model_name = dbutils.widgets.get("model_name")
 
 # DBTITLE 1, Set experiment
 import mlflow
+from mlflow import MlflowClient
 
 mlflow.set_experiment(experiment_name)
 
@@ -85,7 +86,6 @@ raw_data.display()
 # COMMAND ----------
 
 # DBTITLE 1, Helper functions
-from datetime import timedelta, timezone
 import math
 import mlflow.pyfunc
 import pyspark.sql.functions as F
@@ -114,14 +114,8 @@ pop_data.printSchema()
 
 # COMMAND ----------
 
-# MAGIC %pip install databricks-feature-engineering
-# MAGIC %pip install databricks
-
-# COMMAND ----------
-
 # DBTITLE 1, Create FeatureLookups
 from databricks.feature_engineering import FeatureLookup
-import mlflow
 
 population_features_table = dbutils.widgets.get("pop_features_table")
 
@@ -178,16 +172,13 @@ training_df.display()
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC Train a LightGBM model on the data returned by `TrainingSet.to_df`, then log the model with `FeatureEngineeringClient.log_model`. The model will be packaged with feature metadata.
+# MAGIC Train a **Linear Regression** model on the data returned by `TrainingSet.to_df`, then log the model with `FeatureEngineeringClient.log_model`. The model will be packaged with feature metadata.
 
 # COMMAND ----------
 
 # DBTITLE 1, Train model
 from sklearn.linear_model import LinearRegression
 from sklearn.model_selection import train_test_split
-import mlflow.lightgbm
-from mlflow import MlflowClient
-
 
 features_and_label = training_df.columns
 
