@@ -9,15 +9,13 @@ on:
     branches:
       - 'release'
   workflow_dispatch:
-
-defaults:
-  run:
-    working-directory: ./my_mlops_project
-
+  pull_request:
+    paths:
+      - '**'
 env:
-  ARM_TENANT_ID: ${{ secrets.PROD_AZURE_SP_TENANT_ID }}
-  ARM_CLIENT_ID: ${{ secrets.PROD_AZURE_SP_APPLICATION_ID }}
-  ARM_CLIENT_SECRET: ${{ secrets.PROD_AZURE_SP_CLIENT_SECRET }}
+  DATABRICKS_HOST: https://adb-45915588051321.1.azuredatabricks.net
+  DATABRICKS_CLIENT_ID: ${{ secrets.DATABRICKS_CLIENT_ID }}
+  DATABRICKS_CLIENT_SECRET: ${{ secrets.DATABRICKS_CLIENT_SECRET }}
   
 
 jobs:

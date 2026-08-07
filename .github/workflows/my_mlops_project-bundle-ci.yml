@@ -7,19 +7,12 @@ on:
   workflow_dispatch:
   pull_request:
     paths:
-      - 'my_mlops_project/**'
-
-defaults:
-  run:
-    working-directory: ./my_mlops_project/
+      - '**'
 
 env:
-  STAGING_ARM_TENANT_ID: ${{ secrets.STAGING_AZURE_SP_TENANT_ID }}
-  STAGING_ARM_CLIENT_ID: ${{ secrets.STAGING_AZURE_SP_APPLICATION_ID }}
-  STAGING_ARM_CLIENT_SECRET: ${{ secrets.STAGING_AZURE_SP_CLIENT_SECRET }}
-  PROD_ARM_TENANT_ID: ${{ secrets.PROD_AZURE_SP_TENANT_ID }}
-  PROD_ARM_CLIENT_ID: ${{ secrets.PROD_AZURE_SP_APPLICATION_ID }}
-  PROD_ARM_CLIENT_SECRET: ${{ secrets.PROD_AZURE_SP_CLIENT_SECRET }}
+  DATABRICKS_HOST: https://adb-45915588051321.1.azuredatabricks.net
+  DATABRICKS_CLIENT_ID: ${{ secrets.DATABRICKS_CLIENT_ID }}
+  DATABRICKS_CLIENT_SECRET: ${{ secrets.DATABRICKS_CLIENT_SECRET }}
   
 
 jobs:
