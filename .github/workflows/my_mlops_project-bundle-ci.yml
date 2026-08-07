@@ -60,6 +60,7 @@ jobs:
             })
 
   prod:
+    if: false
     concurrency: my_mlops_project-prod-bundle-job
     runs-on: ubuntu-latest
     steps:

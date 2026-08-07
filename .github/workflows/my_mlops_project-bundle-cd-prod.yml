@@ -9,9 +9,7 @@ on:
     branches:
       - 'release'
   workflow_dispatch:
-  pull_request:
-    paths:
-      - '**'
+
 env:
   DATABRICKS_HOST: https://adb-45915588051321.1.azuredatabricks.net
   DATABRICKS_CLIENT_ID: ${{ secrets.DATABRICKS_CLIENT_ID }}
