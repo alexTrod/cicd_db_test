@@ -83,7 +83,7 @@ def normalize_column(col, min_val, max_val):
     return (col - min_val) / (max_val - min_val)
 
 def transform_data(df):
-    df = df.withColumn("age_medan", normalize_column(F.col("age_medan"), 0,100))
+    df = df.withColumn("age_median", normalize_column(F.col("age_median"), 0,100))
 
     return df
    
@@ -91,17 +91,14 @@ def transform_data(df):
 # COMMAND ----------
 
 # DBTITLE 1, Read taxi data for training
-pop_data = transform_data(raw_data)
+raw_data_filtered = raw_data.select("year", "population")
+pop_data = raw_data_filtered
 
 
 # COMMAND ----------
 
 pop_data.printSchema()
 
-
-# COMMAND ----------
-
-print(pop_data['age_medan'])
 
 # COMMAND ----------
 
@@ -122,15 +119,11 @@ population_features_table = [
         feature_names=[
             "yearly_change_pct",
             "yearly_change", 
-            "migrants", 
-            "age_medan", 
+            "age_median", 
             "fertility_rate", 
             "density", 
             "pop_urban_pct", 
-            "pop_urban", 
             "share_world", 
-            "pop_world", 
-            "rank_world"
         ],
         lookup_key=["year"],
     ),
@@ -158,7 +151,7 @@ fe = FeatureEngineeringClient()
 training_set = fe.create_training_set(
     df=pop_data,
     feature_lookups=population_features_table,
-    label="year", # what does this represent
+    label="population", # what does this represent
     exclude_columns=exclude_columns,
 )
 
@@ -192,22 +185,15 @@ data = training_df.toPandas()[features_and_label]
 train, test = train_test_split(data, random_state=123)
 X_train = train.drop(["population"], axis=1)
 X_test = test.drop(["population"], axis=1)
-y_train = train.fare_amount
-y_test = test.fare_amount
+y_train = train.population
+y_test = test.population
 
 mlflow.sklearn.autolog()
 
-reg = LinearRegression().fit(X_train, y_train)
-reg.score(X_test, y_test) #what is 
-
-train_lgb_dataset = lgb.Dataset(X_train, label=y_train.values)
-test_lgb_dataset = lgb.Dataset(X_test, label=y_test.values)
-
-param = {"num_leaves": 32, "objective": "regression", "metric": "rmse"}
-num_rounds = 100
+#reg.score(X_test, y_test) #what is 
 
 # Train a lightGBM model
-model = lgb.train(param, train_lgb_dataset, num_rounds)
+model = LinearRegression().fit(X_train, y_train)
 
 # COMMAND ----------
 
@@ -217,7 +203,7 @@ model = lgb.train(param, train_lgb_dataset, num_rounds)
 fe.log_model(
     model=model,
     artifact_path="model_packaged",
-    flavor=mlflow.lightgbm,
+    flavor=mlflow.sklearn,
     training_set=training_set,
     registered_model_name=model_name,
 )

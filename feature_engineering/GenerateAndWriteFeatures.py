@@ -92,13 +92,6 @@ output_database = "dev"
 
 # COMMAND ----------
 
-# MAGIC %sql
-# MAGIC SELECT current_catalog(), current_schema();
-# MAGIC SELECT * FROM dev.my_mlops_project.population LIMIT 5;
-# MAGIC
-
-# COMMAND ----------
-
 # DBTITLE 1,Create database.
 spark.sql("CREATE DATABASE IF NOT EXISTS " + "dev.my_mlops_project")
 
@@ -128,7 +121,20 @@ features_df = compute_features_fn(
 
 # COMMAND ----------
 
-features_df.printSchema()
+features_df = features_df.select("year", 
+                                 "yearly_change_pct", 
+                                 "yearly_change", 
+                                 "age_medan", 
+                                 "fertility_rate", 
+                                 "density", 
+                                 "pop_urban_pct",
+                                 "share_world").withColumnRenamed('age_medan','age_median')
+features_df.show()  
+
+# COMMAND ----------
+
+# MAGIC %sql
+# MAGIC DROP TABLE dev.my_mlops_project.population_features;
 
 # COMMAND ----------
 
@@ -144,7 +150,6 @@ fe.create_table(
     primary_keys=[pk_columns],
     df=features_df,
 )
-
 # Write the computed features dataframe.
 fe.write_table(
     name=output_table_name,
