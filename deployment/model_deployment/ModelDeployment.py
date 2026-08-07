@@ -38,6 +38,7 @@ assert model_uri != "", "model_uri notebook parameter must be specified"
 deploy(model_uri, env)
 
 # COMMAND ----------
+
 print(
     f"Successfully completed model deployment for {model_uri}"
 )

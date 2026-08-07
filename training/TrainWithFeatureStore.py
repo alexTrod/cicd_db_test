@@ -85,23 +85,6 @@ raw_data.display()
 
 # COMMAND ----------
 
-# DBTITLE 1, Helper functions
-import math
-import mlflow.pyfunc
-import pyspark.sql.functions as F
-from pyspark.sql.types import IntegerType
-
-def normalize_column(col, min_val, max_val):
-    return (col - min_val) / (max_val - min_val)
-
-def transform_data(df):
-    df = df.withColumn("age_median", normalize_column(F.col("age_median"), 0,100))
-
-    return df
-   
-
-# COMMAND ----------
-
 # DBTITLE 1, Read taxi data for training
 raw_data_filtered = raw_data.select("year", "population")
 pop_data = raw_data_filtered
@@ -157,7 +140,7 @@ fe = FeatureEngineeringClient()
 training_set = fe.create_training_set(
     df=pop_data,
     feature_lookups=population_features_table,
-    label="population", # what does this represent
+    label="population",
     exclude_columns=exclude_columns,
 )
 
@@ -195,7 +178,7 @@ mlflow.sklearn.autolog()
 
 #reg.score(X_test, y_test) #what is 
 
-# Train a lightGBM model
+# Train a Linear Regression model
 model = LinearRegression().fit(X_train, y_train)
 
 # COMMAND ----------
