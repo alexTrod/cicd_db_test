@@ -160,8 +160,10 @@ training_df.display()
 # COMMAND ----------
 
 # DBTITLE 1, Train model
-from sklearn.linear_model import LinearRegression
+from sklearn.linear_model import Ridge
 from sklearn.model_selection import train_test_split
+from sklearn.pipeline import Pipeline
+from sklearn.preprocessing import StandardScaler, Normalizer
 
 features_and_label = training_df.columns
 
@@ -169,8 +171,8 @@ features_and_label = training_df.columns
 data = training_df.toPandas()[features_and_label]
 
 train, test = train_test_split(data, random_state=123)
-X_train = train.drop(["population"], axis=1)
-X_test = test.drop(["population"], axis=1)
+X_train = train.drop(["population", "year"], axis=1)
+X_test = test.drop(["population", "year"], axis=1)
 y_train = train.population
 y_test = test.population
 
@@ -179,7 +181,8 @@ mlflow.sklearn.autolog()
 #reg.score(X_test, y_test) #what is 
 
 # Train a Linear Regression model
-model = LinearRegression().fit(X_train, y_train)
+model_pipeline = Pipeline([("scaler", StandardScaler()), ("normalize", Normalizer()), ("model", Ridge())])
+model = model_pipeline.fit(X_train, y_train)
 
 # COMMAND ----------
 
@@ -193,6 +196,11 @@ fe.log_model(
     training_set=training_set,
     registered_model_name=model_name,
 )
+
+#Log metrics with mlflow 
+mlflow.log_metric("r2_score", model.score(X_test, y_test))
+mlflow.log_metric("mse", mean_squared_error(y_test, model.predict(X_test)))
+mlflow.log_metric("rmse", mean_squared_error(y_test, model.predict(X_test), squared=False))
 
 # The returned model URI is needed by the model deployment notebook.
 model_version = get_latest_model_version(model_name)
