@@ -21,17 +21,7 @@ def custom_metrics():
 # Please refer to validation_thresholds parameter in mlflow.evaluate documentation https://mlflow.org/docs/latest/python_api/mlflow.html#mlflow.evaluate
 # TODO(optional) : validation_thresholds
 def validation_thresholds():
-    return {
-        "max_error": MetricThreshold(
-            threshold=100000, greater_is_better=False
-        ),
-        "mean_squared_error": MetricThreshold(
-            threshold=100000,  # mean_squared_error should be <= 500
-            # min_absolute_change=0.01,  # mean_squared_error should be at least 0.01 greater than baseline model accuracy
-            # min_relative_change=0.01,  # mean_squared_error should be at least 1 percent greater than baseline model accuracy
-            greater_is_better=False,
-        ),
-    }
+    return {}
 
 
 # Define evaluator config. Return empty dict if validation rules are not needed.

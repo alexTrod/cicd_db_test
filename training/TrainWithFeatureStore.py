@@ -85,7 +85,7 @@ raw_data.display()
 
 # COMMAND ----------
 
-# DBTITLE 1, Read taxi data for training
+# DBTITLE 1,Read pop data for training
 raw_data_filtered = raw_data.select("year", "population")
 pop_data = raw_data_filtered
 

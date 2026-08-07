@@ -41,7 +41,7 @@ dbutils.widgets.text(
 )
 dbutils.widgets.dropdown("run_mode", "disabled", ["disabled", "dry_run", "enabled"], "Run Mode")
 dbutils.widgets.dropdown("enable_baseline_comparison", "false", ["true", "false"], "Enable Baseline Comparison")
-dbutils.widgets.text("validation_input", "SELECT * FROM dev.my_mlops_project.population`", "Validation Input")
+dbutils.widgets.text("validation_input", "SELECT * FROM dev.my_mlops_project.population", "Validation Input")
 dbutils.widgets.text("model_type", "regressor", "Model Type")
 dbutils.widgets.text("targets", "population", "Targets")
 dbutils.widgets.text("model_name", "dev.my_mlops_project.my_mlops_project-model", "Full (Three-Level) Model Name")
