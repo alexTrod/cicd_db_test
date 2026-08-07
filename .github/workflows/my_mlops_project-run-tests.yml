@@ -11,10 +11,9 @@ defaults:
     working-directory: ./my_mlops_project/
 
 env:
-  ARM_TENANT_ID: ${{ secrets.STAGING_AZURE_SP_TENANT_ID }}
-  ARM_CLIENT_ID: ${{ secrets.STAGING_AZURE_SP_APPLICATION_ID }}
-  ARM_CLIENT_SECRET: ${{ secrets.STAGING_AZURE_SP_CLIENT_SECRET }}
-  
+  DATABRICKS_HOST: https://adb-45915588051321.1.azuredatabricks.net
+  DATABRICKS_CLIENT_ID: ${{ secrets.DATABRICKS_CLIENT_ID }}
+  DATABRICKS_CLIENT_SECRET: ${{ secrets.DATABRICKS_CLIENT_SECRET }}
 
 concurrency: my_mlops_project-feature-training-integration-test-staging
 
@@ -25,7 +24,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
-          python-version: 3.10
+          python-version: "3.10"
       # Feature store tests bring up a local Spark session, so Java is required.
       - uses: actions/setup-java@v4
         with:
