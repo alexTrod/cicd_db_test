@@ -1,6 +1,6 @@
 # my_mlops_project
 
-
+project goal : predict population data using linear regression
 
 This directory contains an ML project based on the default
 [Databricks MLOps Stacks](https://github.com/databricks/mlops-stacks),
