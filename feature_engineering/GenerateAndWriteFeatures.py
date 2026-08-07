@@ -114,7 +114,6 @@ raw_data.printSchema()
 # COMMAND ----------
 
 # DBTITLE 1,Compute features.
-# Compute the features. This is done by dynamically loading the features module.
 from importlib import import_module
 
 mod = import_module(f"features.{features_module}")

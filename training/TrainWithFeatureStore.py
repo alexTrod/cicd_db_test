@@ -27,7 +27,7 @@ env = dbutils.widgets.get("env")
 # Path to the Hive-registered Delta table containing the training data.
 dbutils.widgets.text(
     "training_data_path",
-    "/databricks-datasets/nyctaxi-with-zipcodes/subsampled",
+    "dev.my_mlops_project.population",
     label="Path to the training data",
 )
 
@@ -43,18 +43,11 @@ dbutils.widgets.text(
     "model_name", "dev.my_mlops_project.my_mlops_project-model", label="Full (Three-Level) Model Name"
 )
 
-# Pickup features table name
+# population features table name
 dbutils.widgets.text(
-    "pickup_features_table",
-    "dev.my_mlops_project.trip_pickup_features",
-    label="Pickup Features Table",
-)
-
-# Dropoff features table name
-dbutils.widgets.text(
-    "dropoff_features_table",
-    "dev.my_mlops_project.trip_dropoff_features",
-    label="Dropoff Features Table",
+    "pop_features_table",
+    "dev.my_mlops_project.population_features",
+    label="Population Features Table",
 )
 
 # COMMAND ----------
@@ -74,7 +67,7 @@ mlflow.set_experiment(experiment_name)
 # COMMAND ----------
 
 # DBTITLE 1, Load raw data
-raw_data = spark.read.format("delta").load(input_table_path)
+raw_data = spark.table(input_table_path)
 raw_data.display()
 
 # COMMAND ----------
@@ -86,61 +79,34 @@ import mlflow.pyfunc
 import pyspark.sql.functions as F
 from pyspark.sql.types import IntegerType
 
+def normalize_column(col, min_val, max_val):
+    return (col - min_val) / (max_val - min_val)
 
-def rounded_unix_timestamp(dt, num_minutes=15):
-    """
-    Ceilings datetime dt to interval num_minutes, then returns the unix timestamp.
-    """
-    nsecs = dt.minute * 60 + dt.second + dt.microsecond * 1e-6
-    delta = math.ceil(nsecs / (60 * num_minutes)) * (60 * num_minutes) - nsecs
-    return int((dt + timedelta(seconds=delta)).replace(tzinfo=timezone.utc).timestamp())
+def transform_data(df):
+    df = df.withColumn("age_medan", normalize_column(F.col("age_medan"), 0,100))
 
-
-rounded_unix_timestamp_udf = F.udf(rounded_unix_timestamp, IntegerType())
-
-
-def rounded_taxi_data(taxi_data_df):
-    # Round the taxi data timestamp to 15 and 30 minute intervals so we can join with the pickup and dropoff features
-    # respectively.
-    taxi_data_df = (
-        taxi_data_df.withColumn(
-            "rounded_pickup_datetime",
-            F.to_timestamp(
-                rounded_unix_timestamp_udf(
-                    taxi_data_df["tpep_pickup_datetime"], F.lit(15)
-                )
-            ),
-        )
-        .withColumn(
-            "rounded_dropoff_datetime",
-            F.to_timestamp(
-                rounded_unix_timestamp_udf(
-                    taxi_data_df["tpep_dropoff_datetime"], F.lit(30)
-                )
-            ),
-        )
-        .drop("tpep_pickup_datetime")
-        .drop("tpep_dropoff_datetime")
-    )
-    taxi_data_df.createOrReplaceTempView("taxi_data")
-    return taxi_data_df
-
-
-def get_latest_model_version(model_name):
-    latest_version = 1
-    mlflow_client = MlflowClient()
-    for mv in mlflow_client.search_model_versions(f"name='{model_name}'"):
-        version_int = int(mv.version)
-        if version_int > latest_version:
-            latest_version = version_int
-    return latest_version
-
+    return df
+   
 
 # COMMAND ----------
 
 # DBTITLE 1, Read taxi data for training
-taxi_data = rounded_taxi_data(raw_data)
-taxi_data.display()
+pop_data = transform_data(raw_data)
+
+
+# COMMAND ----------
+
+pop_data.printSchema()
+
+
+# COMMAND ----------
+
+print(pop_data['age_medan'])
+
+# COMMAND ----------
+
+# MAGIC %pip install databricks-feature-engineering
+# MAGIC %pip install databricks
 
 # COMMAND ----------
 
@@ -148,29 +114,28 @@ taxi_data.display()
 from databricks.feature_engineering import FeatureLookup
 import mlflow
 
-pickup_features_table = dbutils.widgets.get("pickup_features_table")
-dropoff_features_table = dbutils.widgets.get("dropoff_features_table")
+population_features_table = dbutils.widgets.get("pop_features_table")
 
-pickup_feature_lookups = [
+population_features_table = [
     FeatureLookup(
-        table_name=pickup_features_table,
+        table_name=population_features_table,
         feature_names=[
-            "mean_fare_window_1h_pickup_zip",
-            "count_trips_window_1h_pickup_zip",
+            "yearly_change_pct",
+            "yearly_change", 
+            "migrants", 
+            "age_medan", 
+            "fertility_rate", 
+            "density", 
+            "pop_urban_pct", 
+            "pop_urban", 
+            "share_world", 
+            "pop_world", 
+            "rank_world"
         ],
-        lookup_key=["pickup_zip"],
-        timestamp_lookup_key=["rounded_pickup_datetime"],
+        lookup_key=["year"],
     ),
 ]
 
-dropoff_feature_lookups = [
-    FeatureLookup(
-        table_name=dropoff_features_table,
-        feature_names=["count_trips_window_30m_dropoff_zip", "dropoff_is_weekend"],
-        lookup_key=["dropoff_zip"],
-        timestamp_lookup_key=["rounded_dropoff_datetime"],
-    ),
-]
 
 # COMMAND ----------
 
@@ -185,15 +150,15 @@ mlflow.start_run()
 
 # Since the rounded timestamp columns would likely cause the model to overfit the data
 # unless additional feature engineering was performed, exclude them to avoid training on them.
-exclude_columns = ["rounded_pickup_datetime", "rounded_dropoff_datetime"]
+exclude_columns = []
 
 fe = FeatureEngineeringClient()
 
 # Create the training set that includes the raw input data merged with corresponding features from both feature tables
 training_set = fe.create_training_set(
-    df=taxi_data,
-    feature_lookups=pickup_feature_lookups + dropoff_feature_lookups,
-    label="fare_amount",
+    df=pop_data,
+    feature_lookups=population_features_table,
+    label="year", # what does this represent
     exclude_columns=exclude_columns,
 )
 
@@ -213,7 +178,7 @@ training_df.display()
 # COMMAND ----------
 
 # DBTITLE 1, Train model
-import lightgbm as lgb
+from sklearn.linear_model import LinearRegression
 from sklearn.model_selection import train_test_split
 import mlflow.lightgbm
 from mlflow import MlflowClient
@@ -225,12 +190,16 @@ features_and_label = training_df.columns
 data = training_df.toPandas()[features_and_label]
 
 train, test = train_test_split(data, random_state=123)
-X_train = train.drop(["fare_amount"], axis=1)
-X_test = test.drop(["fare_amount"], axis=1)
+X_train = train.drop(["population"], axis=1)
+X_test = test.drop(["population"], axis=1)
 y_train = train.fare_amount
 y_test = test.fare_amount
 
-mlflow.lightgbm.autolog()
+mlflow.sklearn.autolog()
+
+reg = LinearRegression().fit(X_train, y_train)
+reg.score(X_test, y_test) #what is 
+
 train_lgb_dataset = lgb.Dataset(X_train, label=y_train.values)
 test_lgb_dataset = lgb.Dataset(X_test, label=y_test.values)
 
