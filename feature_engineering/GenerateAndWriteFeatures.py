@@ -124,11 +124,11 @@ features_df = compute_features_fn(
 features_df = features_df.select("year", 
                                  "yearly_change_pct", 
                                  "yearly_change", 
-                                 "age_medan", 
+                                 "age_median", 
                                  "fertility_rate", 
                                  "density", 
                                  "pop_urban_pct",
-                                 "share_world").withColumnRenamed('age_medan','age_median')
+                                 "share_world")
 features_df.show()  
 
 # COMMAND ----------

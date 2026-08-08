@@ -40,7 +40,7 @@ def compute_features_fn(input_df, timestamp_column, start_date, end_date):
         F.col("yearly_change_pct").cast(FloatType()),
         F.col("yearly_change").cast(LongType()),
         F.coalesce(F.col("migrants").cast(LongType()), F.lit(0)).alias("migrants"),
-        F.col("age_medan").alias("age_medan").cast(FloatType()),
+        F.col("age_median").alias("age_median").cast(FloatType()),
         F.col("fertility_rate").alias("fertility_rate").cast(FloatType()),
         F.col("density").alias("density").cast(LongType()),
         F.col("pop_urban_pct").alias("pop_urban_pct").cast(FloatType()),

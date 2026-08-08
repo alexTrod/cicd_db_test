@@ -118,6 +118,13 @@ population_features_table = [
     ),
 ]
 
+print(population_features_table)
+
+
+# COMMAND ----------
+
+print(population_features_table)
+
 
 # COMMAND ----------
 
