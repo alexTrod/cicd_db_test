@@ -130,9 +130,7 @@ mlflow.end_run()
 # Start an mlflow run, which is needed for the feature store to log the model
 mlflow.start_run()
 
-# Since the rounded timestamp columns would likely cause the model to overfit the data
-# unless additional feature engineering was performed, exclude them to avoid training on them.
-exclude_columns = []
+exclude_columns = ["year"]
 
 fe = FeatureEngineeringClient()
 
@@ -160,8 +158,10 @@ training_df.display()
 # COMMAND ----------
 
 # DBTITLE 1, Train model
-from sklearn.linear_model import LinearRegression
+from sklearn.linear_model import Ridge
 from sklearn.model_selection import train_test_split
+from sklearn.pipeline import Pipeline
+from sklearn.preprocessing import StandardScaler
 
 features_and_label = training_df.columns
 
@@ -178,12 +178,19 @@ mlflow.sklearn.autolog()
 
 #reg.score(X_test, y_test) #what is 
 
-# Train a Linear Regression model
-model = LinearRegression().fit(X_train, y_train)
+# Train a Ridge model
+model_pipeline = Pipeline([("scaler", StandardScaler()), ("model", Ridge())])
+model = model_pipeline.fit(X_train, y_train)
 
 # COMMAND ----------
 
 # DBTITLE 1, Log model and return output.
+from sklearn.metrics import mean_squared_error, mean_absolute_error
+
+#Log metrics with mlflow 
+mlflow.log_metric("r2_score", model.score(X_test, y_test))
+mlflow.log_metric("mae", mean_absolute_error(y_test, model.predict(X_test)))
+mlflow.log_metric("rmse", mean_squared_error(y_test, model.predict(X_test), squared=False))
 
 # Log the trained model with MLflow and package it with feature lookup information.
 fe.log_model(
