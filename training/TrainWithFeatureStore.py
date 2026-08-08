@@ -178,15 +178,19 @@ mlflow.sklearn.autolog()
 
 #reg.score(X_test, y_test) #what is 
 
-# Train a Linear Regression model
+# Train a Ridge model
 model_pipeline = Pipeline([("scaler", StandardScaler()), ("model", Ridge())])
 model = model_pipeline.fit(X_train, y_train)
 
 # COMMAND ----------
 
 # DBTITLE 1, Log model and return output.
-import numpy as np
 from sklearn.metrics import mean_squared_error, mean_absolute_error
+
+#Log metrics with mlflow 
+mlflow.log_metric("r2_score", model.score(X_test, y_test))
+mlflow.log_metric("mae", mean_absolute_error(y_test, model.predict(X_test)))
+mlflow.log_metric("rmse", mean_squared_error(y_test, model.predict(X_test), squared=False))
 
 # Log the trained model with MLflow and package it with feature lookup information.
 fe.log_model(
@@ -196,11 +200,6 @@ fe.log_model(
     training_set=training_set,
     registered_model_name=model_name,
 )
-
-#Log metrics with mlflow 
-mlflow.log_metric("r2_score", model.score(X_test, y_test))
-mlflow.log_metric("mae", mean_absolute_error(y_test, model.predict(X_test)))
-mlflow.log_metric("rmse", mean_squared_error(y_test, model.predict(X_test), squared=False))
 
 # The returned model URI is needed by the model deployment notebook.
 model_version = get_latest_model_version(model_name)
